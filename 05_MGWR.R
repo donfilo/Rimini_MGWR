@@ -11,6 +11,10 @@ library(spdep)       # Matrici di pesi e Moran's I
 library(GWmodel)     # Pacchetto ufficiale per GWR e MGWR
 library(ggplot2)     # Grafici
 
+# Caricamento dati e proiezione in metri
+dati_spaziali <- readRDS("dati_03_pronti_per_gwr.rds")
+dati_sf_metri <- st_transform(dati_spaziali, crs = 32632)
+
 cat("\n======================================================\n")
 cat(" FASE 0: PREPARAZIONE E STANDARDIZZAZIONE (100% DINAMICA)\n")
 cat("======================================================\n")
@@ -370,4 +374,5 @@ cat("\n===================================================================\n")
 # Trova il vincitore assoluto basandosi sull'RMSE minimo
 vincitore <- tabella_finalissima[which.min(tabella_finalissima$RMSE_Errore_Medio), "Modello"]
 cat(" IL VINCITORE ASSOLUTO DELLA PREVISIONE È:", vincitore, "\n")
+
 cat("===================================================================\n")
