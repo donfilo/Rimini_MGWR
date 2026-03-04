@@ -46,6 +46,7 @@ matrice_std <- scale(matrice_predittori)
 prezzo_std <- scale(dati_sf_metri$prezzo_log)[, 1]
 
 # Creazione del dataset Spatial (formato richiesto da GWmodel)
+dati_sf_std <- dati_sf_metri %>% dplyr::select(ID, comune) 
 dati_sf_std <- cbind(dati_sf_std, as.data.frame(matrice_std))
 dati_sf_std$prezzo_std <- prezzo_std 
 dati_sp_std <- as(dati_sf_std, "Spatial") 
@@ -180,4 +181,5 @@ mappa_intercetta_gwr <- ggplot(data = risultati_gwr_sf) +
 print(mappa_local_r2 + mappa_intercetta_gwr)
 
 cat("\n--- SCRIPT GWR COMPLETATO CON SUCCESSO ---\n")
+
 
