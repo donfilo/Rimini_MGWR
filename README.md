@@ -2,7 +2,7 @@
 
 Questo repository contiene l'intera pipeline analitica in R sviluppata per la mia **Tesi di Laurea Magistrale**. Il progetto riguarda la modellazione edonica e la stima dei valori immobiliari (Automated Valuation Model - AVM) applicata al mercato della provincia di Rimini. 
 
-Il progetto confronta rigorosamente modelli as-spaziali (OLS), modelli di econometria spaziale globale (SAR, SEM, SDM) e modelli a coefficienti localmente variabili (GWR e MGWR) per risolvere l'eterogeneità e la dipendenza spaziale tipica dei dati immobiliari.
+Il progetto confronta rigorosamente modelli a-spaziali (OLS), modelli di econometria spaziale globale (SAR, SEM, SDM) e modelli a coefficienti localmente variabili (GWR e MGWR) per risolvere l'eterogeneità e la dipendenza spaziale tipica dei dati immobiliari.
 
 ## 📊 Panoramica del Progetto
 Il codice è strutturato come una "Road Map" econometrica:
