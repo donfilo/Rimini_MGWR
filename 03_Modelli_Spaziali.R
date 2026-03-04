@@ -61,6 +61,17 @@ summary(modello_sdm)
 
 cat("Tutti i modelli spaziali sono stati stimati con successo!\n")
 
+cat("\n--- CALCOLO DEGLI IMPATTI SPAZIALI (SAR e SDM) ---\n")
+# Modello SAR
+impatti_sar <- impacts(modello_sar, listw = lista_pesi_spaziali)
+cat("\nImpatti Modello SAR:\n")
+print(summary(impatti_sar, zstats = TRUE, short = TRUE))
+
+# Modello SDM
+impatti_sdm <- impacts(modello_sdm, listw = lista_pesi_spaziali)
+cat("\nImpatti Modello SDM:\n")
+print(summary(impatti_sdm, zstats = TRUE, short = TRUE))
+
 # --- 4. CONFRONTO ACCADEMICO E SELEZIONE DEL MIGLIORE ---
 
 cat("\n======================================================\n")
@@ -262,4 +273,5 @@ if(aic_sem < aic_ols) {
   cat(" ESITO: L'OLS resiste. La dipendenza spaziale non è abbastanza forte da giustificare il SEM.\n")
 }
 cat("===================================================================\n")
+
 
