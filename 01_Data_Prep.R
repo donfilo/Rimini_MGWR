@@ -765,3 +765,4 @@ saveRDS(dati_stat_log, "dati_master_tabellari.rds")
 # Salva il dataset spaziale (con geometria e proiezione UTM)
 saveRDS(dati_puliti_log, "dati_master_spaziali.rds")
 
+
