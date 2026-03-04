@@ -32,7 +32,6 @@ Il codice è scritto in `R`. Per eseguirlo, assicurati di avere installato i seg
 * **Visualizzazione:** `ggplot2`, `leaflet`, `patchwork`
 
 ## 🙏 Ringraziamenti
-Un ringraziamento speciale alla mia relatrice, la **Prof.ssa Costanza Torricelli**, per il supporto, i preziosi consigli e la guida fondamentale durante la stesura di questa Tesi di Laurea Magistrale e la realizzazione di questo progetto.
-
+Un ringraziamento speciale alla mia relatrice, la **Prof.ssa Costanza Torricelli**, per il supporto, i preziosi consigli e la guida durante la stesura di questa Tesi di Laurea Magistrale.
 ## ✒️ Autore
 Filippo Vincenzi https://www.linkedin.com/in/filippo-vincenzi-3320bb1a9/
