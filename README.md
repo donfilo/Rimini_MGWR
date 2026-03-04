@@ -1,4 +1,4 @@
-# 🏠 Analisi Econometrica Spaziale e AVM del Mercato Immobiliare (Rimini)
+# 🏠 Analisi Spaziale dei Prezzi Immobiliari: un'Applicazione al Mercato Residenziale della Provincia di Rimini
 
 Questo repository contiene l'intera pipeline analitica in R sviluppata per la mia **Tesi di Laurea Magistrale**. Il progetto riguarda la modellazione edonica e la stima dei valori immobiliari (Automated Valuation Model - AVM) applicata al mercato della provincia di Rimini. 
 
