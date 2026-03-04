@@ -35,4 +35,4 @@ Il codice è scritto in `R`. Per eseguirlo, assicurati di avere installato i seg
 Un ringraziamento speciale alla mia relatrice, la **Prof.ssa Costanza Torricelli**, per il supporto, i preziosi consigli e la guida fondamentale durante la stesura di questa Tesi di Laurea Magistrale e la realizzazione di questo progetto.
 
 ## ✒️ Autore
-*(Aggiungi qui il tuo nome, cognome e un link al tuo profilo LinkedIn)*
+Filippo Vincenzi https://www.linkedin.com/in/filippo-vincenzi-3320bb1a9/
