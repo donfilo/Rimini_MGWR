@@ -21,7 +21,7 @@ Il codice è strutturato come una "Road Map" econometrica:
 - `06_AVM_Spaziale.R`: Algoritmo predittivo per la stima in real-time di nuovi immobili.
 
 ## ⚠️ Nota sui Dati (Data Privacy)
-**Il dataset originale utilizzato per questo studio non è presente nel repository.** I dati sono stati raccolti, puliti e geocodificati manualmente attraverso un lungo lavoro di ricerca indipendente, costituendo proprietà intellettuale. 
+**Il dataset originale utilizzato per questo studio non è presente nel repository.** I dati sono stati raccolti manualmente attraverso un lungo lavoro di ricerca indipendente, costituendo proprietà intellettuale. 
 
 Tuttavia, il codice è progettato per essere **completamente riproducibile** con qualsiasi altro dataset immobiliare. Affinché gli script funzionino correttamente, è sufficiente fornire un file Excel (`Dataset.xlsx`) strutturato con le variabili descritte nell'analisi (es. Prezzo_mq, Superficie, Indirizzo e caratteristiche strutturali dell'immobile).
 
