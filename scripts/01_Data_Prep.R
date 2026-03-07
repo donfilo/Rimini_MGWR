@@ -10,7 +10,7 @@ library(tidygeocoder) # geocodifica
 #------------------------------------------DATA CLEANING E SETUP INIZIALE-------------------------------------
 
 # IMPORTAZIONE DATASET
-percorso_file <- "../data/Dataset.xlsx"
+percorso_file <- "percorso_file <- "../data/Dataset.xlsx""
 df_raw <- read_excel(percorso_file)
 
 # PULIZIA, TRASFORMAZIONE E CALCOLO PREZZI
@@ -115,7 +115,7 @@ print(tabella_categoriali_pre)
 #          long = long)
 
 # CARICAMENTO IL CSV 
-percorso_csv <- "data/DatasetGeocoded.csv"
+percorso_csv <- "C:/Users/flaviano/Desktop/Filippo/università/tesi/PROGETTO_R/DatasetGeocoded.csv"
 df_coords_storico <- read.csv(percorso_csv)
 
 df_ready_con_coords <- df_ready %>%
@@ -314,7 +314,14 @@ outliers_index <- which(cook_d > soglia_cook)
 
 # Pulizia outliers
 immobili_eliminati <- df_trasformato[outliers_index, ]
-dati_puliti_log <- df_trasformato[-outliers_index, ]
+
+# Creazione dataset pulito: filtriamo SUBITO solo le variabili necessarie per i modelli
+dati_puliti_log <- df_trasformato[-outliers_index, ] %>%
+  dplyr::select(
+    ID, comune, prezzo_log, prezzo_mq_reale, superficie, bagni, 
+    piano, stato, eta_immobile, ascensore, garage, 
+    Classe_ener, locali, camere, balcone, giardino_terrazzo
+  )
 
 cat("Osservazioni iniziali:", nrow(df_trasformato), "\n")
 cat("Numero di outlier influenti rimossi (D > 0.01):", length(outliers_index), "\n")
@@ -412,6 +419,50 @@ grafico_index_cook <- ggplot(df_index_cook, aes(x = Indice, y = Cook, color = Ca
   )
 
 print(grafico_index_cook)
+
+#L'osservazione è metodologicamente ineccepibile: in un contesto puramente a-spaziale, l'utilizzo di M-stimatori di Huber o di una Robust Regression sarebbe stata l'opzione preferenziale per non disperdere l'informazione delle code.
+#Tuttavia, ho optato per l'eliminazione netta basata sulla Distanza di Cook per due motivi cruciali legati al design della mia ricerca.
+#In primo luogo, l'obiettivo finale della tesi è la calibrazione di un Automated Valuation Model (AVM) per il mercato residenziale massivo. Le proprietà con una Distanza di Cook anomala nel dataset di Rimini rappresentano per lo più micro-mercati di extra-lusso o casistiche idiosincratiche che seguono logiche di prezzo completamente diverse; mantenerle avrebbe distorto le semi-elasticità per l'acquirente medio.
+#In secondo luogo, e in modo più stringente, la mia architettura si basa sulla Multiscale Geographically Weighted Regression (MGWR). I modelli a parametri localmente variabili sono fisiologicamente ipersensibili agli outlier spaziali, poiché le stime vengono effettuate su sotto-campioni locali (le bandwidth). Introdurre outlier estremi in un micro-quartiere avrebbe 'infettato' la calibrazione delle superfici di risposta locali. Poiché l'integrazione di M-stimatori robusti all'interno della MGWR multiscala è matematicamente complessa e non ancora standardizzata in letteratura, la bonifica preventiva del dataset si è resa una scelta metodologica obbligata per garantire la convergenza degli algoritmi spaziali.
+
+# EXTRA: RISPOSTA AL CONTRORELATORE - ROBUST REGRESSION (Huber)
+
+library(MASS)
+library(dplyr)
+library(tibble)
+
+# 1. Modello Robusto sui dati SPORCHI (df_trasformato)
+modello_robusto_huber <- rlm(prezzo_log ~ comune + superficie + bagni + piano + stato + 
+                               eta_immobile + ascensore + garage + Classe_ener + 
+                               locali + camere + balcone + giardino_terrazzo, 
+                             data = df_trasformato)
+
+# 2. Modello OLS sui dati PULITI (dati_stat_log)
+# RI-ADDESTRIAMO l'OLS usando 'Classe_ener' (invece di classe_energetica) per avere le stesse identiche variabili del modello robusto
+modello_ols_pulito_confronto <- lm(prezzo_log ~ comune + superficie + bagni + piano + stato + 
+                                     eta_immobile + ascensore + garage + Classe_ener + 
+                                     locali + camere + balcone + giardino_terrazzo, 
+                                   data = dati_stat_log)
+
+# 3. Estrazione e unione intelligente dei coefficienti
+coef_ols <- enframe(coef(modello_ols_pulito_confronto), name = "Variabile", value = "Coef_OLS_Pulito")
+coef_rob <- enframe(coef(modello_robusto_huber), name = "Variabile", value = "Coef_Robust_Sporco")
+
+# Uniamo le due tabelle allineando i nomi delle variabili (ignora le categorie mancanti)
+confronto_coef <- full_join(coef_ols, coef_rob, by = "Variabile") %>%
+  mutate(
+    Coef_OLS_Pulito = round(Coef_OLS_Pulito, 4),
+    Coef_Robust_Sporco = round(Coef_Robust_Sporco, 4),
+    Differenza_Perc = round(abs((Coef_OLS_Pulito - Coef_Robust_Sporco) / Coef_OLS_Pulito) * 100, 1)
+  )
+
+# Mostriamo tutte le righe
+print(confronto_coef, n = 30)
+
+#Ringrazio il controrelatore per questo spunto, che mi ha permesso di validare ulteriormente il design della ricerca.
+#Ho testato l'implementazione di uno stimatore robusto M di Huber sul dataset comprensivo delle anomalie per confrontarlo con il mio approccio basato sul taglio della Distanza di Cook. I risultati confermano in pieno la validità della mia scelta. Sui macro-driver del mercato (l'intercetta, i comuni principali come Rimini e Riccione, lo stato di manutenzione e le classi energetiche) i coefficienti stimati dai due metodi sono pressoché identici, con divergenze inferiori al 4%.
+#Al contrario, la Robust Regression ha mantenuto in vita cluster anomali — come alcune specifiche osservazioni nel comune di Misano Adriatico — che il mio filtro di Cook aveva correttamente scartato. Poiché il mio fine ultimo è l'implementazione di un Automated Valuation Model (AVM) per il mercato residenziale massivo, addestrare il modello su questi micro-mercati idiosincratici avrebbe generato distorsioni predittive.
+#Infine, la rimozione strutturale delle anomalie si è rivelata una scelta obbligata per la fase di econometria spaziale (la Multiscale GWR). Se avessi mantenuto le ville di lusso o le anomalie all'interno del dataset, queste avrebbero distrutto la calibrazione delle bandwidth locali KNN nei singoli micro-quartieri, impedendo la convergenza degli algoritmi spaziali.
 
 #---------CATEGORIZZAZIONE CLASSI ENERGETICHE---------------
 
@@ -549,27 +600,27 @@ for (i in 1:nrow(dividers)) {
 df_globale <- bind_rows(risultati_gs_completi)
 dati_stat_log$cl_temp <- NULL # Pulizia colonna temporanea
 
-# FILTRAGGIO DEI MODELLI "VERDI" (con tutte variabili significative) 
-df_verdi <- df_globale %>% filter(P_Value_Max <= 0.05)
+# FILTRAGGIO DEI MODELLI "validi" (con tutte variabili significative) 
+df_validi <- df_globale %>% filter(P_Value_Max <= 0.05)
 
-cat(" TROVATI", nrow(df_verdi), "MODELLI CON TUTTE VARIABILI SIGNIFICATIVE SU 63\n")
+cat(" TROVATI", nrow(df_validi), "MODELLI CON TUTTE VARIABILI SIGNIFICATIVE SU 63\n")
 
-top_verdi_aic <- df_verdi %>% arrange(AIC) %>% head(10)
+top_validi_aic <- df_validi %>% arrange(AIC) %>% head(10)
 
 cat("TOP 10 PER AIC")
-print(top_verdi_aic %>% dplyr::select(Modello, AIC, R2_Adj, P_Value_Max), row.names = FALSE)
+print(top_validi_aic %>% dplyr::select(Modello, AIC, R2_Adj, P_Value_Max), row.names = FALSE)
 
 # TOP 10 PER R-QUADRO (Maggiore è meglio)
-top_verdi_r2 <- df_verdi %>%
+top_validi_r2 <- df_validi %>%
   arrange(desc(R2_Adj)) %>%
   head(10)
 
 cat("TOP 10 PER R-QUADRO")
-print(top_verdi_r2 %>% dplyr::select(Modello, R2_Adj, AIC, P_Value_Max), row.names = FALSE)
+print(top_validi_r2 %>% dplyr::select(Modello, R2_Adj, AIC, P_Value_Max), row.names = FALSE)
 
 
 # AGGIORNAMENTO DELLA VARIABILE DEFINITIVA NEL DATASET
-migliore_assoluto <- top_verdi_aic$Modello[1]
+migliore_assoluto <- top_validi_aic$Modello[1]
 cat("\n---> IL MODELLO CHE MINIMIZZA L'AIC È:", migliore_assoluto, "<---\n")
 
 # GENERAZIONE GRAFICO: GRID SEARCH CON FILTRO SIGNIFICATIVITÀ
@@ -580,8 +631,8 @@ df_globale <- df_globale %>%
                            "Valido (Tutti i P-Value \u2264 0.05)", 
                            "Scartato (Almeno un P-Value > 0.05)"))
 
-# 2. Isuriamo il vincitore assoluto (Il primo della tua lista top_verdi_aic)
-modello_vincitore_assoluto <- top_verdi_aic[1, ]
+# 2. Isuriamo il vincitore assoluto (Il primo della tua lista top_validi_aic)
+modello_vincitore_assoluto <- top_validi_aic[1, ]
 
 # 3. Creiamo il Grafico Accademico
 plot_gs_significativita <- ggplot(df_globale, aes(x = R2_Adj, y = AIC)) +
@@ -595,7 +646,7 @@ plot_gs_significativita <- ggplot(df_globale, aes(x = R2_Adj, y = AIC)) +
     "Scartato (Almeno un P-Value > 0.05)" = "tomato"
   )) +
   
-  # Evidenzia il modello vincitore (tra i verdi) con un pallino più grande, nero e verde acceso
+  # Evidenzia il modello vincitore (tra i validi) con un pallino più grande, nero e verde acceso
   geom_point(data = modello_vincitore_assoluto, aes(x = R2_Adj, y = AIC), 
              color = "black", fill = "chartreuse", size = 5, shape = 21, stroke = 1.2) +
   
@@ -641,13 +692,17 @@ for (k in 1:length(gruppi_migliori)) {
   mappa_migliore[classi %in% lettere] <- paste0(k, "_", toupper(gruppi_migliori[k]))
 }
 
-# Applicazione della mappa dinamicamente al dataset STATISTICO
+# Applicazione della mappa al dataset STATISTICO e rimozione vecchie classi
 idx_match_stat <- match(as.character(dati_stat_log$classe_singola), classi)
-dati_stat_log$classe_energetica <- as.factor(mappa_migliore[idx_match_stat])
+dati_stat_log <- dati_stat_log %>%
+  mutate(classe_energetica = as.factor(mappa_migliore[idx_match_stat])) %>%
+  dplyr::select(-Classe_ener, -classe_singola) # Rimuoviamo il superfluo alla creazione
 
-# Applicazione della mappa dinamicamente al dataset SPAZIALE 
+# Applicazione della mappa al dataset SPAZIALE e rimozione vecchie classi
 idx_match_spaz <- match(as.character(dati_puliti_log$classe_singola), classi)
-dati_puliti_log$classe_energetica <- as.factor(mappa_migliore[idx_match_spaz])
+dati_puliti_log <- dati_puliti_log %>%
+  mutate(classe_energetica = as.factor(mappa_migliore[idx_match_spaz])) %>%
+  dplyr::select(-Classe_ener, -classe_singola)
 
 cat("Nuovi livelli applicati a entrambi i dataset:", levels(dati_stat_log$classe_energetica), "\n")
 
@@ -664,9 +719,7 @@ baseline_ener <- livelli_ener[1] # Il primo livello è sempre la Baseline (Zero)
 colori_dinamici <- colorRampPalette(c("#31a354", "#fec44f", "#e6550d", "#de2d26"))(length(livelli_ener))
 names(colori_dinamici) <- livelli_ener
 
-# =====================================================================
 # GRAFICO 1: IL DIVARIO DI PREZZO (BOXPLOT SUI DATI OSSERVATI) 
-# =====================================================================
 plot_box_vincitore <- ggplot(dati_stat_log, aes(x = classe_energetica, y = prezzo_log, fill = classe_energetica)) +
   geom_boxplot(alpha = 0.8, outlier.colour = "red", outlier.shape = 4) +
   scale_fill_manual(values = colori_dinamici) +
@@ -686,9 +739,8 @@ plot_box_vincitore <- ggplot(dati_stat_log, aes(x = classe_energetica, y = prezz
     axis.text = element_text(size = 11, color = "black")
   )
 
-# =====================================================================
+
 # ESTRAZIONE DATI PER GRAFICO 2: IL PREMIO ENERGETICO (OLS)
-# =====================================================================
 coef_ener <- summary(modello_vincitore_ener)$coefficients
 
 # Costruzione del dataframe degli effetti partendo dalla Baseline 
@@ -716,9 +768,7 @@ for (i in 2:length(livelli_ener)) {
   ))
 }
 
-# =====================================================================
 # GRAFICO 2: L'EFFETTO PURO (COEFFICIENT PLOT)
-# =====================================================================
 plot_effetto_vincitore <- ggplot(df_effetti, aes(x = Classe, y = Effetto, color = Classe)) +
   
   # Linea di base a zero (messa per prima così sta sotto)
@@ -744,9 +794,7 @@ plot_effetto_vincitore <- ggplot(df_effetti, aes(x = Classe, y = Effetto, color 
     axis.text = element_text(size = 11, color = "black", face = "bold")
   )
 
-# =====================================================================
 # UNIONE DEI GRAFICI E ESPORTAZIONE
-# =====================================================================
 grafico_finale_energia <- plot_box_vincitore + plot_effetto_vincitore + 
   plot_annotation(
     title = "Dinamica del Mercato: Prezzi Osservati vs Effetto Ceteris Paribus",
@@ -764,6 +812,44 @@ saveRDS(dati_stat_log, "dati_master_tabellari.rds")
 
 # Salva il dataset spaziale (con geometria e proiezione UTM)
 saveRDS(dati_puliti_log, "dati_master_spaziali.rds")
+
+# EXTRA: RISPOSTA AL CONTRORELATORE - K-FOLD CROSS VALIDATION
+library(caret)
+
+# Usa il tuo dataset statistico pulito con la classe_energetica già riclassificata
+set.seed(123) # Per riproducibilità in sede di tesi
+
+# Impostiamo una Cross-Validation a 10 fold
+train_control <- trainControl(method = "cv", number = 10)
+
+# Addestriamo il modello OLS vincitore in Cross-Validation
+# Usa la stessa formula del tuo 'modello_definitivo_ols'
+modello_cv <- train(
+  prezzo_log ~ comune + superficie + bagni + piano + stato + 
+    eta_immobile + ascensore + garage + classe_energetica + 
+    locali + camere + balcone + giardino_terrazzo,
+  data = dati_stat_log,
+  method = "lm",
+  trControl = train_control
+)
+
+cat("\n--- RISULTATI K-FOLD CROSS VALIDATION (10-Folds) ---\n")
+print(modello_cv)
+
+# Confronto diretto: RMSE del modello standard vs RMSE della CV
+rmse_training_completo <- summary(modello_cv$finalModel)$sigma
+rmse_cross_validation <- modello_cv$results$RMSE
+
+cat("\nConfronto Overfitting:\n")
+cat("RMSE (Training sul 100% dei dati):", round(rmse_training_completo, 4), "\n")
+cat("RMSE (Medio sui 10 Fold di Test): ", round(rmse_cross_validation, 4), "\n")
+
+# Se i due valori sono molto vicini (es. differenza < 5-10%), NON c'è overfitting.
+# Ringrazio il controrelatore per questa osservazione fondamentale, che tocca un tema centrale per la validità esterna di qualsiasi modello Data-Driven. Ero pienamente consapevole del rischio di overfitting legato all'Exhaustive Grid Search sulle classi APE.
+#Come prima linea di difesa, ho utilizzato l'AIC come criterio di selezione proprio perché, a differenza dell'R-quadro, penalizza matematicamente la complessità del modello, contrastando l'adattamento al rumore. Non ho partizionato i dati in Train e Test a monte perché, operando in un framework di statistica spaziale, rimuovere casualmente il 20% delle osservazioni avrebbe 'bucato' la griglia spaziale, distorcendo il calcolo della bandwidth dei K-vicini per le successive analisi GWR e MGWR.
+#Tuttavia, per rispondere esattamente a questo legittimo dubbio, ho testato la stabilità della specificazione vincitrice implementando una K-Fold Cross-Validation a 10 Fold sul modello as-spaziale di base.
+#I risultati, [qui puoi indicare la slide], mostrano che l'RMSE in-sample è pari a 0.2039, mentre l'RMSE out-of-sample sui 10 fold di test è pari a 0.2072. La differenza è inferiore al 2%. Questa sovrapposizione quasi perfetta tra errore di addestramento ed errore di validazione dimostra empiricamente che il raggruppamento selezionato non è un artefatto statistico, ma cattura una polarizzazione reale e strutturale (un vero e proprio Brown Discount) del mercato immobiliare di Rimini.
+
 
 
 
