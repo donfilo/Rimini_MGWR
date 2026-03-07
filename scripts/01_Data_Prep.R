@@ -10,7 +10,7 @@ library(tidygeocoder) # geocodifica
 #------------------------------------------DATA CLEANING E SETUP INIZIALE-------------------------------------
 
 # IMPORTAZIONE DATASET
-percorso_file <- "data/Dataset.xlsx"
+percorso_file <- "../data/Dataset.xlsx"
 df_raw <- read_excel(percorso_file)
 
 # PULIZIA, TRASFORMAZIONE E CALCOLO PREZZI
@@ -764,5 +764,6 @@ saveRDS(dati_stat_log, "dati_master_tabellari.rds")
 
 # Salva il dataset spaziale (con geometria e proiezione UTM)
 saveRDS(dati_puliti_log, "dati_master_spaziali.rds")
+
 
 
