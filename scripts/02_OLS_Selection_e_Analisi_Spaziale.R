@@ -37,6 +37,12 @@ tabella_grid_vera <- dredge(
   )
 )
 
+#Ringrazio il controrelatore per questa osservazione, che solleva un dibattito centrale nella moderna ricerca applicata. Vorrei rassicurarla sul fatto che non vi è stata alcuna deriva verso il data-mining incontrollato.
+#Il mio approccio è stato in realtà ibrido. La fase puramente deduttiva, guidata dalla Teoria dei Prezzi Edonici e dall'estimo urbano classico, è avvenuta a monte: ho personalmente selezionato e ingegnerizzato la 'rosa' di variabili candidate da inserire nel Master Model iniziale. L'algoritmo non ha esplorato dati casuali, ma ha operato all'interno di un recinto teorico già blindato.
+#L'utilizzo dell'Exhaustive Grid Search (funzione dredge) è subentrato per risolvere un limite tipico dell'approccio deduttivo umano: l'incapacità di soppesare l'esatto overlap informativo tra variabili fortemente correlate, come 'superficie', 'locali' e 'camere'.
+#Per neutralizzare il rischio di correlazioni spurie o overfitting che lei giustamente menziona, ho imposto all'algoritmo la minimizzazione del BIC (Bayesian Information Criterion), anziché massimizzare l'R-quadro. Come noto in econometria, il BIC penalizza severamente la complessità parametrica nei grandi campioni. L'algoritmo non è andato a caccia di rumore, ma ha agito come un 'Rasoio di Occam' statistico, estraendo la specificazione edonica strutturalmente più parsimoniosa.
+#Avere una Baseline OLS così matematicamente asciutta e robusta era un prerequisito fondamentale: solo depurando prima il modello globale dal rumore ridondante potevo avere la certezza che la varianza residua catturata in seguito dai modelli spaziali (come la Multiscale GWR) fosse vero segnale geografico e non instabilità statistica ereditata da un OLS sovraspecificato manualmente.
+
 # Ho adottato un approccio in due fasi, in linea con le best-practices econometriche. Nella fase di model building (OLS), ho utilizzato il BIC per la Grid Search poiché, punendo più severamente la complessità nei grandi campioni, mi ha garantito l'estrazione della specificazione edonica vera e più parsimoniosa, evitando l'overfitting strutturale.
 # Tuttavia, per la valutazione comparativa tra il modello globale (OLS) e i modelli spaziali (GWR/MGWR), sono passato all'AICc (Akaike Corrected). Come dimostrato dalla letteratura fondamentale sulla GWR (Fotheringham et al., 2002; Charlton & Fotheringham, 2009), l'AICc è lo standard metodologico obbligato per i modelli a parametri localmente variabili, in quanto integra una correzione per le dimensioni del campione e gestisce in modo corretto la traccia della matrice "hat" per il calcolo dei gradi di libertà effettivi. Usare il BIC per confrontare OLS e GWR sarebbe stato matematicamente improprio.
 
@@ -139,6 +145,11 @@ if(jb_test$p.value < 0.05) {
   cat("I residui non sono perfettamente normali (frequente nei large dataset immobiliari).\n")
 }
 
+#Ringrazio il controrelatore per questa domanda, che tocca un punto nevralgico della teoria econometrica: il rapporto tra assunzioni distribuzionali e dimensione del campione.
+#Nel mio caso specifico, il test di Jarque-Bera non ha rigettato l'ipotesi nulla, confermando la bontà della trasformazione. Tuttavia, se il test avesse segnalato una violazione — eventualità estremamente comune nei large dataset immobiliari a causa dell'iper-sensibilità dei test formali a deviazioni millimetriche — la validità dell'impianto inferenziale non ne sarebbe uscita compromessa.
+#In primis, l'assenza di normalità non invalida il Teorema di Gauss-Markov, mantenendo i miei coefficienti corretti e non distorti. Per quanto riguarda l'inferenza e la validità dei test-t, mi sarei affidato senza riserve alla teoria asintotica. Lavorando con un campione sufficientemente ampio, per via del Teorema del Limite Centrale, la distribuzione campionaria degli stimatori OLS converge alla normale, rendendo i test-t pienamente validi e interpretabili asintoticamente.
+#Per rispondere alla seconda parte della sua domanda sulle trasformazioni: l'analisi preventiva tramite Box-Cox aveva chiaramente indicato una convergenza verso la trasformazione logaritmica. Non ho preso in considerazione trasformazioni più complesse al solo scopo di forzare la normalità perfetta, perché nell'ambito della modellazione edonica la priorità è l'interpretazione economica. Il logaritmo mi ha permesso di leggere i coefficienti come semi-elasticità percentuali, un'informazione vitale per il mercato immobiliare che qualsiasi altra trasformazione puramente statistica avrebbe irrimediabilmente corrotto.
+
 cat("\n--- 2. TEST MULTICOLLINEARITA' (VIF) ---\n")
 vif_risultati <- vif(modello_definitivo_ols)
 print(vif_risultati)
@@ -157,7 +168,42 @@ if(bp_test$p.value < 0.05) {
   
   cat("\n--- SOMMARIO OLS CON STANDARD ERROR ROBUSTI (HC3) ---\n")
   print(ols_robusto)
-  cat("\nNOTA TESI: Usa questi P-value robusti per commentare la significatività delle variabili!\n")
+  
+  # =====================================================================
+  # GENERAZIONE TABELLA ACCADEMICA PER LA TESI (Stile Stargazer)
+  # =====================================================================
+  cat("\n--- GENERAZIONE TABELLA WORD IN CORSO ---\n")
+  
+  # Se non hai installato il pacchetto stargazer, decommenta la riga sotto:
+  # install.packages("stargazer")
+  library(stargazer)
+  
+  # 1. Estraiamo gli Standard Error e i P-value ROBUSTI
+  se_robusti <- ols_robusto[, "Std. Error"]
+  pval_robusti <- ols_robusto[, "Pr(>|t|)"]
+  
+  # 2. Calcoliamo gli Intervalli di Confidenza Robusti al 95% (come nella tua foto)
+  ci_inferiore <- ols_robusto[, "Estimate"] - 1.96 * se_robusti
+  ci_superiore <- ols_robusto[, "Estimate"] + 1.96 * se_robusti
+  intervalli_custom <- cbind(ci_inferiore, ci_superiore)
+  
+  # 3. Creazione ed esportazione della tabella in stile accademico perfetto
+  stargazer(modello_definitivo_ols, 
+            type = "html", 
+            out = "Tabella_OLS_Robusta.doc", # Salva come documento Word leggibile!
+            se = list(se_robusti),           # Inietta gli SE robusti
+            p = list(pval_robusti),          # Inietta i P-value robusti
+            ci = TRUE,                       # Usa gli intervalli tra parentesi
+            ci.custom = list(intervalli_custom), # Inietta gli intervalli robusti
+            title = "Risultati della Baseline Edonica (Modello OLS)",
+            dep.var.labels = "prezzo_log",
+            notes = "Note: ***p<0.01, **p<0.05, *p<0.1. Intervalli di confidenza robusti (HC3) tra parentesi.",
+            notes.append = FALSE,
+            digits = 3)
+  
+  cat("\nSUCCESSO! Cerca il file 'Tabella_OLS_Robusta.doc' nella tua cartella del progetto.\n")
+  cat("Aprilo con Word: troverai la tabella esatta della tua foto, ma con i valori corretti per l'eteroschedasticità!\n")
+  
 } else {
   cat("\nOmoschedasticità confermata. I p-value del summary base sono validi.\n")
 }
@@ -277,3 +323,4 @@ if(nrow(sovrapprezzate_hl) > 0) {
 
 saveRDS(dati_spaziali, "dati_02_lisa_spaziali.rds")
 saveRDS(modello_definitivo_ols, "modello_02_ols_definitivo.rds")
+
