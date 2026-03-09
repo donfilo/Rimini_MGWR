@@ -10,7 +10,7 @@ library(tidygeocoder) # geocodifica
 #------------------------------------------DATA CLEANING E SETUP INIZIALE-------------------------------------
 
 # IMPORTAZIONE DATASET
-percorso_file <- "percorso_file <- "../data/Dataset.xlsx""
+percorso_file <- "C:/Users/flaviano/Desktop/Filippo/Dataset.xlsx"
 df_raw <- read_excel(percorso_file)
 
 # PULIZIA, TRASFORMAZIONE E CALCOLO PREZZI
@@ -849,7 +849,6 @@ cat("RMSE (Medio sui 10 Fold di Test): ", round(rmse_cross_validation, 4), "\n")
 #Come prima linea di difesa, ho utilizzato l'AIC come criterio di selezione proprio perché, a differenza dell'R-quadro, penalizza matematicamente la complessità del modello, contrastando l'adattamento al rumore. Non ho partizionato i dati in Train e Test a monte perché, operando in un framework di statistica spaziale, rimuovere casualmente il 20% delle osservazioni avrebbe 'bucato' la griglia spaziale, distorcendo il calcolo della bandwidth dei K-vicini per le successive analisi GWR e MGWR.
 #Tuttavia, per rispondere esattamente a questo legittimo dubbio, ho testato la stabilità della specificazione vincitrice implementando una K-Fold Cross-Validation a 10 Fold sul modello as-spaziale di base.
 #I risultati, [qui puoi indicare la slide], mostrano che l'RMSE in-sample è pari a 0.2039, mentre l'RMSE out-of-sample sui 10 fold di test è pari a 0.2072. La differenza è inferiore al 2%. Questa sovrapposizione quasi perfetta tra errore di addestramento ed errore di validazione dimostra empiricamente che il raggruppamento selezionato non è un artefatto statistico, ma cattura una polarizzazione reale e strutturale (un vero e proprio Brown Discount) del mercato immobiliare di Rimini.
-
 
 
 
