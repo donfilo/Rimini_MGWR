@@ -196,7 +196,7 @@ num_variabili <- length(nomi_variabili_dinamici)
 dati_boxplot <- risultati_mgwr_sf %>%
   st_drop_geometry() %>%
   # Selezioniamo "alla cieca" le prime N colonne (che sono SEMPRE i coefficienti!)
-  select(1:all_of(num_variabili))
+  dplyr::select(all_of(1:num_variabili))
 
 # Forziamo i nostri nomi corretti e puliti sulle colonne
 colnames(dati_boxplot) <- nomi_variabili_dinamici
@@ -384,6 +384,4 @@ cat("===================================================================\n")
 #Proprio per evitare questo bias strutturale, la selezione formale e rigorosa del modello all'interno della mia analisi non si è basata sull'RMSE. Come mostrato nelle tabelle intermedie dello script, il confronto che ha sancito il superamento del modello OLS da parte della modellistica spaziale è stato condotto tramite l'AICc (Akaike Information Criterion corretto). L'AICc penalizza in modo severissimo il modello locale includendo la traccia della matrice Hat, disinnescando il 'doping' dei gradi di libertà. Se la MGWR ha vinto la sfida dell'AICc, significa che il suo potere esplicativo supera ampiamente la penalizzazione per la sua complessità.
 #Perché allora ho presentato una 'Finalissima' basata sull'RMSE? Il motivo è puramente estimativo e operativo. Il fine ultimo della mia tesi è la creazione di un Automated Valuation Model (AVM) per il Mass Appraisal. L'operatore immobiliare non ragiona in Criteri di Informazione, ma in log-prezzi o Euro di scostamento. L'esposizione dell'RMSE in-sample aveva il solo scopo di tradurre in una metrica tangibile e commerciale il miglioramento ottenuto.
 #Infine, per quanto riguarda l'Out-of-Sample: pur essendo il gold standard predittivo, privare la MGWR in fase di calibrazione (tramite algoritmi di back-fitting) del 20% del campione avrebbe creato dei 'buchi' topologici nella matrice dei vicini KNN, distorcendo l'estrazione delle bandwidth spaziali. In aggiunta, uno dei grandi vantaggi della Multiscale GWR rispetto alla GWR classica è proprio quello di limitare lo spreco di gradi di libertà, assegnando scale globali alle variabili che non mostrano instabilità spaziale, arginando ulteriormente il rischio di overfitting.
-
-cat("===================================================================\n")
 
