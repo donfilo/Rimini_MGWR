@@ -23,7 +23,8 @@ Il codice è strutturato come una "Road Map" econometrica:
 ## ⚠️ Nota sui Dati (Data Privacy)
 **Il dataset originale utilizzato per questo studio non è presente nel repository.** I dati sono stati raccolti manualmente attraverso un lungo lavoro di ricerca indipendente, costituendo proprietà intellettuale. 
 
-Tuttavia, il codice è progettato per essere **completamente riproducibile** con qualsiasi altro dataset immobiliare. Affinché gli script funzionino correttamente, è sufficiente fornire un file Excel (`Dataset.xlsx`) strutturato con le variabili descritte nell'analisi (es. Prezzo_mq, Superficie, Indirizzo e caratteristiche strutturali dell'immobile).
+Tuttavia, l'intera pipeline è progettata per essere completamente riproducibile con qualsiasi altro dataset immobiliare. Per facilitare questo processo, all'interno della cartella data/ troverai un file Excel facsimile precompilato.
+Puoi utilizzare questo file come template: ti basterà sostituire i dati fittizi con i tuoi, mantenendo intatta la struttura delle colonne e le intestazioni delle variabili (es. Prezzo_mq, Superficie, Indirizzo e caratteristiche strutturali dell'immobile), per garantire il corretto funzionamento di tutti gli script.
 
 ## 🛠 Requisiti e Librerie
 Il codice è scritto in `R`. Per eseguirlo, assicurati di avere installato i seguenti pacchetti principali:
