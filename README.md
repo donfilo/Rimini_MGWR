@@ -14,7 +14,7 @@ Il codice è strutturato come una "Road Map" econometrica:
 
 ## 📂 Struttura del Codice
 - `01_Data_Prep.R`: Pulizia, trasformazioni spaziali (UTM 32N), Box-Cox, e selezione ottima delle variabili.
-- `02_OLS_Selection_e_Analisi_Spaziale.R`: Torneo OLS (Grid Search), diagnostica classica (VIF, Breusch-Pagan) e Local Moran's I (Hotspot/Coldspot).
+- `02_OLS_Selection_e_Analisi_Spaziale.R`: Selezione del modello OLS (Grid Search), diagnostica classica (VIF, Breusch-Pagan) e Local Moran's I (Hotspot/Coldspot).
 - `03_Modelli_Spaziali.R`: Modelli globali (SAR, SEM, SDM) e calcolo degli impatti.
 - `04_GWR.R`: Calibrazione della GWR standard con bandwidth adattiva.
 - `05_MGWR.R`: Calibrazione Multiscale GWR, estrazione delle bandwidth ottimali e confronto finale delle performance predittive.
